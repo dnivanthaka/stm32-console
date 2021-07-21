@@ -62,6 +62,8 @@ inline void system_init() {
     gpio_init(GPIOB, RCC, 9, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_PUSH);
     //CS
     gpio_init(GPIOB, RCC, 8, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_PUSH);
+    gpio_init(GPIOA, RCC, 0, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_PUSH);
+    gpio_init(GPIOA, RCC, 1, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_PUSH);
     //sound
     //gpio_init(GPIOA, RCC, 0, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_ALT_PUSH);
     //gpio_init(GPIOA, RCC, 0, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_PUSH);
@@ -128,7 +130,7 @@ inline void system_init() {
     //nvic_enable_irq(EXTI4_IRQ);
 
     //need to do it after initializing interrupts, would freeze since the mcp23017 intrrupt fires immediately
-    //keypad_init(I2C1, RCC);
+    keypad_init(I2C1, RCC);
     gpio_out(GPIOC, 13, 0);
 
 
@@ -142,12 +144,35 @@ inline void system_init() {
     //screen_fill(0xff);
     st7565r_update();
     for(;;){
-        st7565r_clear();
+        uint8_t tmp = keypad_read();
+        if(KEYPAD_UP(tmp)) {
+            gpio_out(GPIOA, 0, 1);
+        }else if(KEYPAD_DOWN(tmp)){
+            gpio_out(GPIOA, 1, 1);
+        }else if(KEYPAD_LEFT(tmp)){
+            gpio_out(GPIOA, 0, 1);
+        }else if(KEYPAD_RIGHT(tmp)){
+            gpio_out(GPIOA, 1, 1);
+        }else if(KEYPAD_A(tmp)){
+            gpio_out(GPIOA, 0, 1);
+        }else if(KEYPAD_B(tmp)){
+            gpio_out(GPIOA, 1, 1);
+        }else if(KEYPAD_SELECT(tmp)){
+            gpio_out(GPIOA, 0, 1);
+        }else if(KEYPAD_START(tmp)){
+            gpio_out(GPIOA, 1, 1);
+        }else{
+            gpio_out(GPIOA, 0, 0);
+            gpio_out(GPIOA, 1, 0);
+        }
+        //gpio_out(GPIOA, 0, 1);
+        //st7565r_clear();
         //screen_fill(0x0f);
-        delay_ms(2000);
+        //delay_ms(500);
         //screen_fill(0xf0);
-        st7565r_update();
-        delay_ms(2000);
+        //gpio_out(GPIOA, 0, 0);
+        //st7565r_update();
+        delay_ms(10);
     }
     for(;;);
 

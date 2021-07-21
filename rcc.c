@@ -86,11 +86,13 @@ void _delay_ms(timer_t *tim, uint32_t delay) {
     } 
 
     tim->psc = 7200 - 1;   //72Mhz / 7200 => 10Khz = 1/100 = 0.1ms
-    tim->arr = 1000 - 1; //0.1ms * 10 = 1ms
+    tim->arr = 10 - 1; //0.1ms * 10 = 1ms
     tim->sr = 0;
     tim->cr1 = 1;
-    while(delay--){
+    while(delay){
         while(! (tim->sr & 1));
+        tim->sr = 0;
+        delay--;
     }
 
     tim->cr1 = 0; //stop counter
