@@ -15,7 +15,7 @@
 #define KEYPAD_RCC RCC
 
 void keypad_init() {
-    i2c_init(KEYPAD_I2C, KEYPAD_RCC);
+    pcf8574_init(KEYPAD_I2C, KEYPAD_RCC);
 
     pcf8574_write(KEYPAD_I2C, KEYPAD_ADDR, 0xff);
 

@@ -16,7 +16,7 @@ void gpio_init(gpio_t *gpio, rcc_t *rcc, uint8_t pin, uint8_t mode){
   rcc->apb2enr |= GPIO_IOPCEN;
  }
 
- if(pin > 8) i = 1;
+ if(pin >= 8) i = 1;
  uint8_t shift = ((pin - (i * 8)) * 4);
  //first unset the previous mode
  uint32_t prev = gpio->cr[i] & ~(0xf << shift);

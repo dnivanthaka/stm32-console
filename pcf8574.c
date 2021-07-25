@@ -5,6 +5,10 @@
 #include "pcf8574.h"
 
 
+void pcf8574_init(i2c_t *bus, rcc_t *rcc){
+    i2c_init(bus, rcc);
+}
+
 void pcf8574_write(i2c_t *i2c, uint8_t addr, uint8_t data) {
 
     _disable_irq();

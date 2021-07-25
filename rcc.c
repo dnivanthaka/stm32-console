@@ -103,7 +103,7 @@ void rcc_setup_cpu(rcc_t *rcc, uint32_t pll_clk, uint32_t apb_clk){
  rcc->cr |= (1 << 16);
  while(! (rcc->cr & (1 << 17)));
 
- rcc->cfgr |= 1;  //Switch to HSE
+ rcc->cfgr = 1;  //Switch to HSE
  rcc->cr &= ~1;   // Disable HSI
  rcc->cfgr |= pll_clk; //PLL = 9
  rcc->cfgr |= (1 << 16); //HSE as PLL_SRC

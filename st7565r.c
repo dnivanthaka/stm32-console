@@ -18,15 +18,6 @@
 #define ST7565R_RS_PORT  GPIOA
 
 volatile uint8_t buffer[(ST7565R_WIDTH * ST7565R_HEIGHT) / 8] = {
-    0x7C, 0x12, 0x11, 0x12, 0x7C, 0, 0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0, 0,
-    0x20, 0x54, 0x54, 0x78, 0x40, 0, 0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0, 0,// a
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -88,7 +79,16 @@ volatile uint8_t buffer[(ST7565R_WIDTH * ST7565R_HEIGHT) / 8] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x61, 0x59, 0x49, 0x4D, 0x43, 
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
 void st7565r_init() {
@@ -155,6 +155,8 @@ void st7565r_init() {
    
     gpio_out(ST7565R_CS_PORT, ST7565R_CS, 1);
 
+    st7565r_fill_screen(0xff);
+    delay_ms(1000);
     st7565r_clear();
 }
 
@@ -200,6 +202,7 @@ void st7565r_set_location(uint8_t page, uint16_t col) {
 }
 
 void st7565r_update() {
+    //_disable_irq();
     gpio_out(ST7565R_CS_PORT, ST7565R_CS, 0);
     
     //st7565r_set_location(0, 0);
@@ -211,10 +214,54 @@ void st7565r_update() {
         st7565r_command(ST7565R_COL_ADDR_SET_LOWER | 0);
         //st7565r_command(ST7565R_RMW_WRITE);
 
-        for(int c=127;c>=0;c--){
+        //set data mode
+        gpio_out(ST7565R_RS_PORT, ST7565R_RS, 1);
 
-            st7565r_data(buffer[((p) * ST7565R_WIDTH) + c]);
+        for(int c=127;c>=0;c--){
+            spi_write(SPI1, buffer[((p) * ST7565R_WIDTH) + c]);
         }
     }
     gpio_out(ST7565R_CS_PORT, ST7565R_CS, 1);
+    //_enable_irq();
+}
+
+void st7565r_put(uint16_t loc, const uint8_t *buff, uint16_t count) {
+    //use memcpy?
+    for(uint16_t i=0;i<count;i++){
+        buffer[loc + i] = *(buff + i);
+    }
+}
+
+void st7565r_putpixel(uint8_t x, uint8_t y, uint8_t color){
+    uint16_t segment = 0, offset = 0;
+
+    if(x >= ST7565R_WIDTH || x < 0 || y >= ST7565R_HEIGHT || y < 0){
+        return;
+    }
+
+    segment = y / 8;
+    offset = y % 8;
+    uint8_t bt = buffer[(segment * ST7565R_WIDTH) + x];
+
+    if(color){
+        bt |= 1 << offset;
+    }else{
+        bt &= ~(1 << offset);
+    }
+
+    buffer[(segment * ST7565R_WIDTH) + x] = bt;
+}
+
+uint8_t st7565r_getpixel(uint8_t x, uint8_t y){
+    uint16_t segment = 0, offset = 0;
+
+    if(x >= ST7565R_WIDTH || x < 0 || y >= ST7565R_HEIGHT || y < 0){
+        return 0;
+    }
+
+    segment = y / 8;
+    offset = y % 8;
+    uint8_t bt = buffer[(segment * ST7565R_WIDTH) + x];
+
+    return (bt >> offset) & 1;
 }

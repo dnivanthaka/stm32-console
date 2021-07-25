@@ -57,5 +57,8 @@ void st7565r_clear();
 void st7565r_fill_screen(uint8_t color);
 void st7565r_set_location(uint8_t page, uint16_t col);
 void st7565r_update();
+void st7565r_put(uint16_t loc, const uint8_t *buff, uint16_t count);
+void st7565r_putpixel(uint8_t x, uint8_t y, uint8_t color);
+uint8_t st7565r_getpixel(uint8_t x, uint8_t y);
 
 #endif

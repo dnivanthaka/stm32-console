@@ -56,6 +56,7 @@ inline void system_init() {
     gpio_init(GPIOA, RCC, 9,  GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_ALT_PUSH);
     //gpio_init(gpio_a, rcc, 9,  GPIO_MODE_OUT_50_MHZ, GPIO_CNF_OUT_PUSH);
     gpio_init(GPIOA, RCC, 10,  GPIO_MODE_INPUT | GPIO_CNF_IN_FLOAT);
+    gpio_init(GPIOA, RCC, 8, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_PUSH);
     //RS
     gpio_init(GPIOA, RCC, 2, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_PUSH);
     //RSE
@@ -64,6 +65,7 @@ inline void system_init() {
     gpio_init(GPIOB, RCC, 8, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_PUSH);
     gpio_init(GPIOA, RCC, 0, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_PUSH);
     gpio_init(GPIOA, RCC, 1, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_PUSH);
+
     //sound
     //gpio_init(GPIOA, RCC, 0, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_ALT_PUSH);
     //gpio_init(GPIOA, RCC, 0, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_PUSH);
@@ -97,13 +99,6 @@ inline void system_init() {
 
     //usart_init(USART1);
 
-    /*for(;;){
-    gpio_out(GPIOC, 13, 0);
-    delay_ms(500);
-    gpio_out(GPIOC, 13, 1);
-    delay_ms(500);
-    }*/
-
     spi_init(SPI1, SPI_MASTER, SPI_MODE_UNI2 | SPI_OUTPUT_ENABLE, 
             SPI_DFF_8BIT, SPI_CLK_DIV2, SPI_CPOL_0, SPI_CPHA_1, SPI_SLAVE_MGMT_DISABLE);
 
@@ -129,52 +124,12 @@ inline void system_init() {
     //nvic_enable_irq(EXTI9_5_IRQ);
     //nvic_enable_irq(EXTI4_IRQ);
 
-    //need to do it after initializing interrupts, would freeze since the mcp23017 intrrupt fires immediately
+    //screen backlight
+    gpio_out(GPIOA, 8, 1);
     keypad_init(I2C1, RCC);
     gpio_out(GPIOC, 13, 0);
 
-
     screen_init();
-
-    //ili9341_set_rotation(3, SPI1, GPIOA);
-    //st7735_set_rotation(0xA8, GPIOA, SPI1);            //MY=1, MX=0, MV=1, RGB=1 (for backtab RGB=0)
-    //screen_fill(Color565(0, 0, 0));
-    //gpio_out(GPIOA, 0, 1);
-    //for(;;);
-    //screen_fill(0xff);
-    st7565r_update();
-    for(;;){
-        uint8_t tmp = keypad_read();
-        if(KEYPAD_UP(tmp)) {
-            gpio_out(GPIOA, 0, 1);
-        }else if(KEYPAD_DOWN(tmp)){
-            gpio_out(GPIOA, 1, 1);
-        }else if(KEYPAD_LEFT(tmp)){
-            gpio_out(GPIOA, 0, 1);
-        }else if(KEYPAD_RIGHT(tmp)){
-            gpio_out(GPIOA, 1, 1);
-        }else if(KEYPAD_A(tmp)){
-            gpio_out(GPIOA, 0, 1);
-        }else if(KEYPAD_B(tmp)){
-            gpio_out(GPIOA, 1, 1);
-        }else if(KEYPAD_SELECT(tmp)){
-            gpio_out(GPIOA, 0, 1);
-        }else if(KEYPAD_START(tmp)){
-            gpio_out(GPIOA, 1, 1);
-        }else{
-            gpio_out(GPIOA, 0, 0);
-            gpio_out(GPIOA, 1, 0);
-        }
-        //gpio_out(GPIOA, 0, 1);
-        //st7565r_clear();
-        //screen_fill(0x0f);
-        //delay_ms(500);
-        //screen_fill(0xf0);
-        //gpio_out(GPIOA, 0, 0);
-        //st7565r_update();
-        delay_ms(10);
-    }
-    for(;;);
 
     //st7735_tearing_off(GPIOA, SPI1);
 

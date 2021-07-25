@@ -12,6 +12,7 @@
 #include "console_system.h"
 #include "adc.h"
 #include "bitmap.h"
+#include "font.h"
 
 #define FPSCOUNT 1000/30 //(30fps) in ms
 
@@ -242,13 +243,86 @@ void test_timers() {
    TIM2->cr1 |= 0x01; //timer enable
 }
 
-
 int main(){
     uint16_t mcp_data = 0;
     uint32_t start_ticks = 0;
     uint32_t *tmp = (uint32_t *)0x20000100;
 
     system_init();
+    /*
+    for(uint16_t i=0;i<(255 * 5);i+=5){
+        st7565r_put(i, &Font[i], 5);
+    }*/
+    //st7565r_update();
+    uint8_t x = 0, y = 0;
+    int x_vel = 0, y_vel = 0;
+    uint8_t ball[] = {0x0f, 0x0f, 0x0f, 0x0f};
+    uint8_t ball_bk[] = {0, 0, 0, 0};
+    for(;;){
+        start_ticks = systick_counter_get();
+
+        x_vel = 0;
+        y_vel = 0;
+        
+        uint8_t tmp = keypad_read();
+        //wait here until key press
+        if(tmp == 0xff){
+            continue;
+        }
+        if(KEYPAD_UP(tmp)) {
+            //gpio_out(GPIOA, 0, 1);
+            y_vel = -1;
+        }else if(KEYPAD_DOWN(tmp)){
+            //gpio_out(GPIOA, 1, 1);
+            y_vel = 1;
+        }else if(KEYPAD_LEFT(tmp)){
+            //gpio_out(GPIOA, 0, 1);
+            x_vel = -1;
+        }else if(KEYPAD_RIGHT(tmp)){
+            //gpio_out(GPIOA, 1, 1);
+            x_vel = 1;
+        }else if(KEYPAD_A(tmp)){
+            //gpio_out(GPIOA, 0, 1);
+        }else if(KEYPAD_B(tmp)){
+            //gpio_out(GPIOA, 1, 1);
+        }else if(KEYPAD_SELECT(tmp)){
+            //gpio_out(GPIOA, 0, 1);
+        }else if(KEYPAD_START(tmp)){
+            //gpio_out(GPIOA, 1, 1);
+        }
+        /*else{
+            //gpio_out(GPIOA, 0, 0);
+            //gpio_out(GPIOA, 1, 0);
+            x_vel = 0;
+            y_vel = 0;
+        }*/
+
+        //st7565r_putpixel(x, y, 0);
+
+        if(x + x_vel >= SCREEN_WIDTH || x + x_vel < 0){
+            x_vel = 0;
+        }
+
+        if(y + y_vel >= SCREEN_HEIGHT || y + y_vel < 0){
+            y_vel = 0;
+        }
+
+        x += x_vel;
+        y += y_vel;
+
+        st7565r_putpixel(x, y, 1);
+
+        //gpio_out(GPIOA, 0, 1);
+        //st7565r_clear();
+        //screen_fill(0x0f);
+        //delay_ms(500);
+        //screen_fill(0xf0);
+        //gpio_out(GPIOA, 0, 0);
+        st7565r_update();
+        while(ABS(systick_counter_get() - start_ticks) < FPSCOUNT){
+
+        }
+    }
     adc_t *ADC1 = (adc_t *)ADC1BASE; 
     adc_init(ADC1);
 
@@ -261,110 +335,5 @@ int main(){
     ledVal = 0;
 
     //screen_fill(Color565(0,0,0));
-
-    int x_vel = 0, y_vel = 0;
-    uint16_t x_pos = 0, y_pos = 0, x_prev = 0, y_prev = 0;
-	uint8_t inp;
-    
-    //draw_line(0, 0, 100, 100, Color565(255,0,0));
-    //
-    //sound_init();
-    //beep();
-    //run_demo();
-
-    //screen_fill_rect(x_pos, y_pos, 8, 8, Color565(0,0,255));
-
-
-    soundq_push(1, 200);
-
-    while(1){
-
-    soundq_process();
-	//if(keypadkeys == 0xffff){
-	    //continue;
-	//}
-	
-	uint8_t inp = (keypad_read() & 0x00ff);
-	//uint8_t inp = (keypadkeys & 0x00ff);
-    //TODO need to solve the sticky key issue
-	//inp = keypadkeys & 0x00ff;
-
-	//uint8_t inp = gpio_in(gpio_b, 5);
-	x_vel = 0;
-	y_vel = 0;
-
-	inp = ~inp;
-        if(inp){
-        soundq_push(1, 50);
-	    //NB display is horizontal
-	    //up	
-	    if(KEYPAD_UP(inp)){
-	     y_vel = -8;
-	    }
-	    //down	
-	    if(KEYPAD_DOWN(inp)){
-	     y_vel = 8;
-	    }
-	    //left
-	    if(KEYPAD_LEFT(inp)){
-	     x_vel = -8;
-	    }
-	    //right
-	    if(KEYPAD_RIGHT(inp)){
-	     x_vel = 8;
-	    }
-	}else{
-	    continue;
-	}
-
-    start_ticks = systick_counter_get();
-    //screen_fill_rect(x_pos, y_pos, 8, 8, Color565(0,0,0));
-
-        x_prev = x_pos;
-        y_prev = y_pos;
-	/*
-	inp = ((keypad_read(i2c1) & 0xff00) >> 8);
-	inp = ~inp;
-        if(inp){	
-	    gpio_out(gpio_c, 13, 0);
-	    continue;
-	}
-	gpio_out(gpio_c, 13, 1);
-	*/
-        if(x_pos + x_vel + 8 > SCREEN_WIDTH)
-        {
-            x_vel = 0;
-        }
-        if(x_pos + x_vel < 0)
-        {
-            x_vel = 0;
-        }
-
-        if(y_pos + y_vel + 8 > SCREEN_HEIGHT)
-        {
-            y_vel = 0;
-        }
-
-        if(y_pos + y_vel < 0)
-        {
-            y_vel = 0;
-        }
-
-        x_pos += x_vel;
-        y_pos += y_vel;
-
-        //screen_fill_rect(x_prev, y_prev, 8, 8, Color565(0,0,0));
-        //screen_fill_rect(x_pos, y_pos, 8, 8, Color565(0,0,255));
-
-
-    while(ABS(systick_counter_get() - start_ticks) < FPSCOUNT){
-
-    }
-
-	//reaches here whenever a button is pressed
-	//beep();
-    //delay_ms(1, 10);
-
-    }
  return 0;
 }
