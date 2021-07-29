@@ -1,5 +1,5 @@
 #include "types.h"
-#include "stmf103xxx.h"
+#include "stm32f103xxx.h"
 #include "interrupts.h"
 #include "i2c.h"
 #include "pcf8574.h"
