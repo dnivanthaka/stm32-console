@@ -11,7 +11,11 @@
 #define KEYPAD_SELECT(val) (!(val & (1 << 7)))
 #define KEYPAD_START(val)  (!(val & (1 << 6)))
 
+#define KEYPAD_DEFAULT_VAL 0xff
+
 void keypad_init();
-uint8_t keypad_read();
+void keypad_read();
+uint8_t keypad_keypressed();
+uint8_t keypad_getstate();
 
 #endif

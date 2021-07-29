@@ -26,6 +26,12 @@ typedef struct coord_t {
     uint16_t x, y;
 } coord_t;
 
+typedef struct entity_t {
+    uint8_t w, h;
+    int x_vel, y_vel;
+    coord_t pos;
+} entity_t;
+
 void exti3_irq_handler(){
     //keypadkeys = keypad_read();
 
@@ -33,13 +39,13 @@ void exti3_irq_handler(){
 }
 
 void exti4_irq_handler(){
-    keypadkeys = keypad_read();
+    //keypadkeys = keypad_read();
 
     EXTI->pr = (1 << 4); //Clearing the pending flag
 }
 
 void exti9_5_irq_handler(){
-    keypadkeys = keypad_read();
+    //keypadkeys = keypad_read();
 
     EXTI->pr = (1 << 5); //Clearing the pending flag
 }
@@ -243,10 +249,42 @@ void test_timers() {
    TIM2->cr1 |= 0x01; //timer enable
 }
 
+void draw_entity(entity_t *entity, uint8_t color){
+    for(uint8_t i=0;i<entity->h;i++){
+        for(uint8_t j=0;j<entity->w;j++){
+            st7565r_putpixel(entity->pos.x + j, entity->pos.y + i, color);
+        }
+    }
+}
+
+void draw_char(uint8_t x, uint8_t y,uint8_t c){
+    uint16_t idex = c * 5;
+    if(c != '\n'){
+        //st7565r_put(loc, &Font[c * 5], 5);
+        for(uint8_t h = 0;h < 7;h++){
+            for(uint8_t w=0;w < 5;w++){
+                st7565r_putpixel(x + w, y + h, Font[idex + w] & (1 << h));
+            }
+        }
+    }
+}
+
+void draw_text(uint8_t x, uint8_t y, uint8_t *str){
+    uint8_t i = 0;
+
+    while(*str){
+        draw_char(x + i, y, *str);
+        str++;
+        i += 6;
+    }
+}
+
 int main(){
     uint16_t mcp_data = 0;
     uint32_t start_ticks = 0;
     uint32_t *tmp = (uint32_t *)0x20000100;
+    uint8_t mid_x = SCREEN_WIDTH_MID;
+    uint8_t mid_y = SCREEN_HEIGHT_MID;
 
     system_init();
     /*
@@ -258,29 +296,44 @@ int main(){
     int x_vel = 0, y_vel = 0;
     uint8_t ball[] = {0x0f, 0x0f, 0x0f, 0x0f};
     uint8_t ball_bk[] = {0, 0, 0, 0};
+
+    entity_t paddle;
+    paddle.w = 7;
+    paddle.h = 2;
+    paddle.pos.x = mid_x - 3;
+    paddle.pos.y = SCREEN_HEIGHT - 2;
+    paddle.x_vel = 0;
+    paddle.y_vel = 0;
+
+    draw_entity(&paddle, 1);
+    st7565r_update();
+
     for(;;){
         start_ticks = systick_counter_get();
 
-        x_vel = 0;
-        y_vel = 0;
+        paddle.x_vel = 0;
+        paddle.y_vel = 0;
         
-        uint8_t tmp = keypad_read();
+        keypad_read();
+        uint8_t tmp = keypad_getstate();
         //wait here until key press
-        if(tmp == 0xff){
+        if(tmp == KEYPAD_DEFAULT_VAL){
             continue;
         }
         if(KEYPAD_UP(tmp)) {
             //gpio_out(GPIOA, 0, 1);
-            y_vel = -1;
+            //y_vel = -1;
         }else if(KEYPAD_DOWN(tmp)){
             //gpio_out(GPIOA, 1, 1);
-            y_vel = 1;
+            //y_vel = 1;
         }else if(KEYPAD_LEFT(tmp)){
             //gpio_out(GPIOA, 0, 1);
-            x_vel = -1;
+            //x_vel = -1;
+            paddle.x_vel = -1;
         }else if(KEYPAD_RIGHT(tmp)){
             //gpio_out(GPIOA, 1, 1);
-            x_vel = 1;
+            //x_vel = 1;
+            paddle.x_vel = 1;
         }else if(KEYPAD_A(tmp)){
             //gpio_out(GPIOA, 0, 1);
         }else if(KEYPAD_B(tmp)){
@@ -289,28 +342,39 @@ int main(){
             //gpio_out(GPIOA, 0, 1);
         }else if(KEYPAD_START(tmp)){
             //gpio_out(GPIOA, 1, 1);
-        }
-        /*else{
+        }else{
             //gpio_out(GPIOA, 0, 0);
             //gpio_out(GPIOA, 1, 0);
-            x_vel = 0;
-            y_vel = 0;
-        }*/
+            //x_vel = 0;
+            //y_vel = 0;
+        }
 
         //st7565r_putpixel(x, y, 0);
+        draw_entity(&paddle, 0);
 
-        if(x + x_vel >= SCREEN_WIDTH || x + x_vel < 0){
-            x_vel = 0;
+        if(paddle.pos.x + paddle.x_vel + paddle.w >= SCREEN_WIDTH){
+            //x_vel = -1;
+            paddle.x_vel = 0;
+        }else if(paddle.pos.x + paddle.x_vel < 0){
+            //x_vel = 1;
+            paddle.x_vel = 0;
         }
 
-        if(y + y_vel >= SCREEN_HEIGHT || y + y_vel < 0){
+/*
+        if(y + y_vel >= SCREEN_HEIGHT){
+            //y_vel = -1;
+            y_vel = 0;
+        }else if(y + y_vel < 0){
+            //y_vel = 1;
             y_vel = 0;
         }
+*/
 
-        x += x_vel;
-        y += y_vel;
+        paddle.pos.x += paddle.x_vel;
+        paddle.pos.y += paddle.y_vel;
 
-        st7565r_putpixel(x, y, 1);
+        //st7565r_putpixel(x, y, 1);
+        draw_entity(&paddle, 1);
 
         //gpio_out(GPIOA, 0, 1);
         //st7565r_clear();
@@ -318,6 +382,11 @@ int main(){
         //delay_ms(500);
         //screen_fill(0xf0);
         //gpio_out(GPIOA, 0, 0);
+        //st7565r_put(0, &Font[48 * 5], 5);
+        //draw_char(0, 0, 'd');
+        draw_text(0, 0, "Item 1");
+        draw_text(0, 8, "Item 2");
+        draw_text(0, 16, "Item 3");
         st7565r_update();
         while(ABS(systick_counter_get() - start_ticks) < FPSCOUNT){
 

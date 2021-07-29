@@ -225,9 +225,9 @@ void st7565r_update() {
     //_enable_irq();
 }
 
-void st7565r_put(uint16_t loc, const uint8_t *buff, uint16_t count) {
+void st7565r_put(uint8_t loc, const uint8_t *buff, uint8_t count) {
     //use memcpy?
-    for(uint16_t i=0;i<count;i++){
+    for(uint8_t i=0;i<count;i++){
         buffer[loc + i] = *(buff + i);
     }
 }

@@ -67,13 +67,13 @@ void sound_init() {
    RCC->apb2enr |= 0xFC;
    RCC->apb1enr |= (1 << 0);
 
-   TIM2->ccer = 1 << 0; //CC1P = 0, CC1E = 1
-   TIM2->ccmr[0] = 0x0068; //PWM1, OC1PE = 1
+   TIM2->ccer = 1 << 12; //CC4P = 0, CC4E = 1 ,enable channel 4
+   TIM2->ccmr[1] = 0x6800; //PWM4, OC4PE = 1
    TIM2->cr1 = 0x80;
 
    TIM2->psc = 720 - 1; //prescalar 72
-   TIM2->arr = 1010 - 1; //ARR = 999
-   TIM2->ccr[0] = 1000; //duty cycle (300 / 1000) * 100
+   TIM2->arr = 1050 - 1; //ARR = 999
+   TIM2->ccr[3] = 1000; //duty cycle (300 / 1000) * 100
    TIM2->egr = 1; // UG = 1 generate update
    TIM2->cr1 |= 0x01; //timer enable
 
@@ -90,4 +90,12 @@ void sound_off() {
 
 void sound_tick_update() {
     sound_ticks--;
+}
+
+void sound_beep(uint16_t period){
+    uint16_t half = period / 2;
+    sound_on();
+    delay_ms(half);
+    sound_off();
+    delay_ms(half);
 }

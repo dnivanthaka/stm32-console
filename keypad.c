@@ -10,19 +10,30 @@
 #include "keypad.h"
 
 #define KEYPAD_ADDR 0x20
-
 #define KEYPAD_I2C I2C1
 #define KEYPAD_RCC RCC
+
+static uint8_t keystate;
 
 void keypad_init() {
     pcf8574_init(KEYPAD_I2C, KEYPAD_RCC);
 
     pcf8574_write(KEYPAD_I2C, KEYPAD_ADDR, 0xff);
 
+    keystate = KEYPAD_DEFAULT_VAL;
+
     //clearing out pending interrupts
     keypad_read();
 }
 
-uint8_t keypad_read(){
-    return pcf8574_read(KEYPAD_I2C, KEYPAD_ADDR);
+void keypad_read(){
+    keystate = pcf8574_read(KEYPAD_I2C, KEYPAD_ADDR);
+}
+
+uint8_t keypad_keypressed(){
+    return keystate != KEYPAD_DEFAULT_VAL;
+} 
+
+uint8_t keypad_getstate(){
+    return keystate;
 }

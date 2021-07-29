@@ -12,11 +12,14 @@
 #include "keypad.h"
 #include "timer.h"
 #include "st7565r.h"
+#include "sound.h"
 
 //screen routines
 
 #define SCREEN_WIDTH 128
+#define SCREEN_WIDTH_MID (SCREEN_WIDTH / 2)
 #define SCREEN_HEIGHT 64
+#define SCREEN_HEIGHT_MID (SCREEN_HEIGHT / 2)
 
 inline void screen_init() {
     //ili9341_init(SPI1, GPIOA);
@@ -67,7 +70,7 @@ inline void system_init() {
     gpio_init(GPIOA, RCC, 1, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_PUSH);
 
     //sound
-    //gpio_init(GPIOA, RCC, 0, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_ALT_PUSH);
+    gpio_init(GPIOA, RCC, 3, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_ALT_PUSH);
     //gpio_init(GPIOA, RCC, 0, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_PUSH);
 
     gpio_init(GPIOB, RCC, 4, GPIO_MODE_INPUT | GPIO_CNF_IN_FLOAT );
@@ -124,12 +127,17 @@ inline void system_init() {
     //nvic_enable_irq(EXTI9_5_IRQ);
     //nvic_enable_irq(EXTI4_IRQ);
 
-    //screen backlight
-    gpio_out(GPIOA, 8, 1);
     keypad_init(I2C1, RCC);
     gpio_out(GPIOC, 13, 0);
 
+    sound_init();
+    sound_beep(1000);
+
+    //screen backlight
+    gpio_out(GPIOA, 8, 1);
+
     screen_init();
+
 
     //st7735_tearing_off(GPIOA, SPI1);
 
