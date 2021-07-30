@@ -131,7 +131,7 @@ inline void system_init() {
     gpio_out(GPIOC, 13, 0);
 
     sound_init();
-    sound_beep(1000);
+    sound_beep(500);
 
     //screen backlight
     gpio_out(GPIOA, 8, 1);

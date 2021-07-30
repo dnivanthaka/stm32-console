@@ -32,6 +32,11 @@ typedef struct entity_t {
     coord_t pos;
 } entity_t;
 
+typedef struct menuitem_t {
+    char *str;
+    uint8_t (*func_ptr)();
+} menuitem_t;
+
 void exti3_irq_handler(){
     //keypadkeys = keypad_read();
 
@@ -269,6 +274,14 @@ void draw_char(uint8_t x, uint8_t y,uint8_t c){
     }
 }
 
+uint8_t func1(){
+    st7565r_putpixel(127, 10, 1);
+}
+
+uint8_t func2(){
+    st7565r_putpixel(0, 10, 1);
+}
+
 void draw_text(uint8_t x, uint8_t y, uint8_t *str){
     uint8_t i = 0;
 
@@ -297,6 +310,14 @@ int main(){
     uint8_t ball[] = {0x0f, 0x0f, 0x0f, 0x0f};
     uint8_t ball_bk[] = {0, 0, 0, 0};
 
+    menuitem_t item1;
+    item1.str = "Left Dot";
+    item1.func_ptr = &func2;
+
+    menuitem_t item2;
+    item2.str = "Right Dot";
+    item2.func_ptr = &func1;
+
     entity_t paddle;
     paddle.w = 7;
     paddle.h = 2;
@@ -309,7 +330,6 @@ int main(){
     st7565r_update();
 
     for(;;){
-        start_ticks = systick_counter_get();
 
         paddle.x_vel = 0;
         paddle.y_vel = 0;
@@ -320,6 +340,9 @@ int main(){
         if(tmp == KEYPAD_DEFAULT_VAL){
             continue;
         }
+        
+        start_ticks = systick_counter_get();
+
         if(KEYPAD_UP(tmp)) {
             //gpio_out(GPIOA, 0, 1);
             //y_vel = -1;
@@ -360,7 +383,7 @@ int main(){
             paddle.x_vel = 0;
         }
 
-/*
+        /*
         if(y + y_vel >= SCREEN_HEIGHT){
             //y_vel = -1;
             y_vel = 0;
@@ -368,7 +391,7 @@ int main(){
             //y_vel = 1;
             y_vel = 0;
         }
-*/
+        */
 
         paddle.pos.x += paddle.x_vel;
         paddle.pos.y += paddle.y_vel;
@@ -384,9 +407,10 @@ int main(){
         //gpio_out(GPIOA, 0, 0);
         //st7565r_put(0, &Font[48 * 5], 5);
         //draw_char(0, 0, 'd');
-        draw_text(0, 0, "Item 1");
-        draw_text(0, 8, "Item 2");
-        draw_text(0, 16, "Item 3");
+        draw_text(50, 0, "Item 1");
+        draw_text(50, 8, "Item 2");
+        draw_text(50, 16, "Item 3");
+        item2.func_ptr();
         st7565r_update();
         while(ABS(systick_counter_get() - start_ticks) < FPSCOUNT){
 

@@ -72,7 +72,7 @@ void sound_init() {
    TIM2->cr1 = 0x80;
 
    TIM2->psc = 720 - 1; //prescalar 72
-   TIM2->arr = 1050 - 1; //ARR = 999
+   TIM2->arr = 1500 - 1; //ARR = 999
    TIM2->ccr[3] = 1000; //duty cycle (300 / 1000) * 100
    TIM2->egr = 1; // UG = 1 generate update
    TIM2->cr1 |= 0x01; //timer enable
