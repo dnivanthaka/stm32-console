@@ -307,8 +307,8 @@ int main(){
     //st7565r_update();
     uint8_t x = 0, y = 0;
     int x_vel = 0, y_vel = 0;
-    uint8_t ball[] = {0x0f, 0x0f, 0x0f, 0x0f};
-    uint8_t ball_bk[] = {0, 0, 0, 0};
+    //uint8_t ball[] = {0x0f, 0x0f, 0x0f, 0x0f};
+    //uint8_t ball_bk[] = {0, 0, 0, 0};
 
     menuitem_t item1;
     item1.str = "Left Dot";
@@ -325,6 +325,14 @@ int main(){
     paddle.pos.y = SCREEN_HEIGHT - 2;
     paddle.x_vel = 0;
     paddle.y_vel = 0;
+
+    entity_t ball;
+    ball.w = 3;
+    ball.h = 3;
+    ball.pos.x = SCREEN_WIDTH_MID - 1;
+    ball.pos.y = 0;
+    ball.x_vel = 0;
+    ball.y_vel = 0;
 
     draw_entity(&paddle, 1);
     st7565r_update();
@@ -407,10 +415,10 @@ int main(){
         //gpio_out(GPIOA, 0, 0);
         //st7565r_put(0, &Font[48 * 5], 5);
         //draw_char(0, 0, 'd');
-        draw_text(50, 0, "Item 1");
-        draw_text(50, 8, "Item 2");
-        draw_text(50, 16, "Item 3");
-        item2.func_ptr();
+        //draw_text(50, 0, "Item 1");
+        //draw_text(50, 8, "Item 2");
+        //draw_text(50, 16, "Item 3");
+        //item2.func_ptr();
         st7565r_update();
         while(ABS(systick_counter_get() - start_ticks) < FPSCOUNT){
 
