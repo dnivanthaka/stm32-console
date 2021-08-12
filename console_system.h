@@ -109,23 +109,24 @@ inline void system_init() {
     //GPIOB->odr &= ~(1 << 4); //without pullup for pb4
     //gpio_b->odr &= ~(1 << 3); //without pullup for pb3
     //GPIOB->odr &= ~(1 << 5); //without pullup for pb5
+    GPIOB->odr |= (1 << 4); //pullup for pb4
 
     //Setting up interrupts
     //AFIO->exticr[0] = 1 << 12;   //PB3 as input
-    //AFIO->exticr[1] = 1 << 0;   //PB4 as input
-    //AFIO->exticr[1] |= 1 << 4;   //PB4 as input
+    AFIO->exticr[1] = 1 << 0;   //PB4 as input
+    AFIO->exticr[1] |= 1 << 4;   //PB4 as input
     
     //EXTI->ftsr = (1 << 3); //falling edge
     //EXTI->ftsr = (1 << 5); //falling edge
-    //EXTI->ftsr |= (1 << 4); //falling edge
+    EXTI->ftsr |= (1 << 4); //falling edge
 
     //EXTI->imr = (1 << 3);  // enable interrupt exti3
     //EXTI->imr = (1 << 5);  // enable interrupt exti3
-    //EXTI->imr |= (1 << 4);  // enable interrupt exti4
+    EXTI->imr |= (1 << 4);  // enable interrupt exti4
 
     //nvic_enable_irq(EXTI3_IRQ);
     //nvic_enable_irq(EXTI9_5_IRQ);
-    //nvic_enable_irq(EXTI4_IRQ);
+    nvic_enable_irq(EXTI4_IRQ);
 
     keypad_init(I2C1, RCC);
     gpio_out(GPIOC, 13, 0);

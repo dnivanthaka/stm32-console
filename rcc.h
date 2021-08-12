@@ -95,4 +95,9 @@ uint16_t rand();
 #define delay_ms(y) _delay_ms(TIM3, y)
 #define delay_us(y) _delay_us(TIM3, y)
 
+#define FPSCOUNT 1000/60 //(60fps) in ms
+
+uint8_t vsync_flag;
+void rcc_vsync_wait(uint16_t count);
+
 #endif

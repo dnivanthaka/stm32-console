@@ -142,7 +142,7 @@ void st7565r_init() {
     //st7565r_command(ST7565R_SET_PAGE_ADDR | 0x07);
 
     st7565r_command(0x81);    //Electronic Volume   
-    st7565r_command(0x09);    //Reference Register selection  Vo=(1+Rb/Ra)(1+a)*2.1=10   
+    st7565r_command(0x0E);    //Reference Register selection  Vo=(1+Rb/Ra)(1+a)*2.1=10   
 
     st7565r_command(ST7565R_OUTPUT_MODE_NORM);
 
@@ -151,7 +151,7 @@ void st7565r_init() {
     st7565r_command(ST7565R_SET_PAGE_ADDR | 0);
     st7565r_command(ST7565R_SET_START_LINE | 0);
     
-    st7565r_command(0x19);   //constrast
+    st7565r_command(0x18);   //constrast
    
     gpio_out(ST7565R_CS_PORT, ST7565R_CS, 1);
 

@@ -45,6 +45,9 @@
 #define TIM4BASE    0x40000800
 #define TIM5BASE    0x40000C00
 
+#define DMA1BASE    0x40020000
+#define DMA2BASE    0x40020400
+
 #define RCC     ((rcc_t *) RCCBASE)
 #define SYSTICK ((systick_t *) SYSTICKBASE)
 

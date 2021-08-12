@@ -2,12 +2,16 @@
 #include "stm32f103xxx.h"
 #include "timer.h"
 #include "rcc.h"
+#include "st7565r.h"
+
+#define SYSTICK_LOAD_VAL (((SYSTEM_CORE_CLOCK / 8) / 1000) * FPSCOUNT)
 
 static volatile uint32_t systick_counter = 0;
 static uint16_t g_seed;
 
 //Interrupt handler
 void systick_handler() {
+    st7565r_update();
     systick_counter++;
 }
 
@@ -26,8 +30,15 @@ void systick_init(systick_t *syt){
  syt->load  = 0;
 }
 
+void rcc_vsync_wait(uint16_t count){
+    uint32_t wait_till = systick_counter + count;
+
+    while(systick_counter < wait_till);
+}
+
 void systick_interrupt_start(systick_t *syt) {
- syt->load = ((SYSTEM_CORE_CLOCK / 8) / 1000);  //every millisecond
+ //syt->load = ((SYSTEM_CORE_CLOCK / 8) / 1000);  //every millisecond
+ syt->load = SYSTICK_LOAD_VAL;  //every frame 
  syt->val = 0;
  syt->ctrl &= ~SYT_COUNTF;
  syt->ctrl |= SYT_INT;

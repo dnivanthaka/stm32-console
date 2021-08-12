@@ -13,8 +13,10 @@
 #include "adc.h"
 #include "bitmap.h"
 #include "font.h"
+#include "eventq.h"
+#include "dma.h"
 
-#define FPSCOUNT 1000/30 //(30fps) in ms
+//#define FPSCOUNT 1000/60 //(60fps) in ms
 
 void PUT32(uint32_t, uint32_t);
 unsigned int GET32(uint32_t);
@@ -23,13 +25,13 @@ uint8_t ledVal = 0;
 volatile uint16_t keypadkeys = 0xffff;
 
 typedef struct coord_t {
-    uint16_t x, y;
+    int x, y;
 } coord_t;
 
 typedef struct entity_t {
     uint8_t w, h;
     int x_vel, y_vel;
-    coord_t pos;
+    coord_t pos, prev1, prev2;
 } entity_t;
 
 typedef struct menuitem_t {
@@ -37,14 +39,17 @@ typedef struct menuitem_t {
     uint8_t (*func_ptr)();
 } menuitem_t;
 
+
+eventq_t events[8];
+
 void exti3_irq_handler(){
-    //keypadkeys = keypad_read();
+    //keypad_read();
 
     EXTI->pr = (1 << 3); //Clearing the pending flag
 }
 
 void exti4_irq_handler(){
-    //keypadkeys = keypad_read();
+    keypad_read();
 
     EXTI->pr = (1 << 4); //Clearing the pending flag
 }
@@ -298,6 +303,7 @@ int main(){
     uint32_t *tmp = (uint32_t *)0x20000100;
     uint8_t mid_x = SCREEN_WIDTH_MID;
     uint8_t mid_y = SCREEN_HEIGHT_MID;
+    uint16_t frame = 0;
 
     system_init();
     /*
@@ -319,10 +325,14 @@ int main(){
     item2.func_ptr = &func1;
 
     entity_t paddle;
-    paddle.w = 7;
+    paddle.w = 13;
     paddle.h = 2;
-    paddle.pos.x = mid_x - 3;
+    paddle.pos.x = mid_x - 6;
     paddle.pos.y = SCREEN_HEIGHT - 2;
+    paddle.prev1.x = paddle.pos.x;
+    paddle.prev1.y = paddle.pos.y;
+    paddle.prev2.x = paddle.pos.x;
+    paddle.prev2.y = paddle.pos.y;
     paddle.x_vel = 0;
     paddle.y_vel = 0;
 
@@ -331,25 +341,36 @@ int main(){
     ball.h = 3;
     ball.pos.x = SCREEN_WIDTH_MID - 1;
     ball.pos.y = 0;
-    ball.x_vel = 0;
-    ball.y_vel = 0;
+    ball.prev1.x = ball.pos.x;
+    ball.prev1.y = ball.pos.y;
+    ball.prev2.x = ball.pos.x;
+    ball.prev2.y = ball.pos.y;
+    ball.x_vel = 1;
+    ball.y_vel = 1;
+
+    entity_t old_paddle, old_ball;
+
+    old_paddle = paddle;
+    old_ball = ball;
 
     draw_entity(&paddle, 1);
-    st7565r_update();
+    //st7565r_update();
 
     for(;;){
+
+        rcc_vsync_wait(1);
 
         paddle.x_vel = 0;
         paddle.y_vel = 0;
         
-        keypad_read();
+        //keypad_read();
         uint8_t tmp = keypad_getstate();
         //wait here until key press
-        if(tmp == KEYPAD_DEFAULT_VAL){
+        /*if(tmp == KEYPAD_DEFAULT_VAL){
             continue;
-        }
+        }*/
         
-        start_ticks = systick_counter_get();
+        //start_ticks = systick_counter_get();
 
         if(KEYPAD_UP(tmp)) {
             //gpio_out(GPIOA, 0, 1);
@@ -360,11 +381,11 @@ int main(){
         }else if(KEYPAD_LEFT(tmp)){
             //gpio_out(GPIOA, 0, 1);
             //x_vel = -1;
-            paddle.x_vel = -1;
+            paddle.x_vel = -4;
         }else if(KEYPAD_RIGHT(tmp)){
             //gpio_out(GPIOA, 1, 1);
             //x_vel = 1;
-            paddle.x_vel = 1;
+            paddle.x_vel = 4;
         }else if(KEYPAD_A(tmp)){
             //gpio_out(GPIOA, 0, 1);
         }else if(KEYPAD_B(tmp)){
@@ -381,7 +402,10 @@ int main(){
         }
 
         //st7565r_putpixel(x, y, 0);
-        draw_entity(&paddle, 0);
+        /*if(frame == 4){
+            draw_entity(&paddle, 0);
+            draw_entity(&ball, 0);
+        }*/
 
         if(paddle.pos.x + paddle.x_vel + paddle.w >= SCREEN_WIDTH){
             //x_vel = -1;
@@ -391,6 +415,24 @@ int main(){
             paddle.x_vel = 0;
         }
 
+        //if(ball.pos.x + ball.x_vel + ball.w > SCREEN_WIDTH){
+        if(ball.pos.x + ball.w > SCREEN_WIDTH){
+            //x_vel = -1;
+            ball.x_vel = -1;
+        }
+        if(ball.pos.x + ball.x_vel < 0){
+            //x_vel = 1;
+            ball.x_vel = 1;
+        }
+        //if(ball.pos.y + ball.y_vel + ball.h > SCREEN_HEIGHT){
+        if(ball.pos.y + ball.h > SCREEN_HEIGHT){
+            //x_vel = -1;
+            ball.y_vel = -1;
+        }
+        if(ball.pos.y + ball.y_vel < 0){
+            //x_vel = 1;
+            ball.y_vel = 1;
+        }
         /*
         if(y + y_vel >= SCREEN_HEIGHT){
             //y_vel = -1;
@@ -400,12 +442,60 @@ int main(){
             y_vel = 0;
         }
         */
+            ball.prev2.x = ball.prev1.x;
+            ball.prev2.y = ball.prev1.y;
 
-        paddle.pos.x += paddle.x_vel;
-        paddle.pos.y += paddle.y_vel;
+            ball.prev1.x = ball.pos.x;
+            ball.prev1.y = ball.pos.y;
+
+            ball.pos.x += ball.x_vel;
+            ball.pos.y += ball.y_vel;
+       if(frame % 4 == 0){
+            //old_ball.pos.x = old_ball.prev1.x;
+            //old_ball.pos.y = old_ball.prev1.y;
+
+            //remove last object
+            draw_entity(&old_ball, 0);
+
+            /*ball.prev2.x = ball.prev1.x;
+            ball.prev2.y = ball.prev1.y;
+
+            ball.prev1.x = ball.pos.x;
+            ball.prev1.y = ball.pos.y;
+
+            ball.pos.x += ball.x_vel;
+            ball.pos.y += ball.y_vel;*/
+            
+            draw_entity(&ball, 1);
+            
+            old_ball = ball;
+            //delay_ms(25);
+            rcc_vsync_wait(4);
+       }
+
+            paddle.prev2.x = paddle.prev1.x;
+            paddle.prev2.y = paddle.prev1.y;
+
+            paddle.prev1.x = paddle.pos.x;
+            paddle.prev1.y = paddle.pos.y;
+
+            paddle.pos.x += paddle.x_vel;
+            paddle.pos.y += paddle.y_vel;
+        if(frame % 4 == 0){
+            //paddle.pos.x += paddle.x_vel;
+            //paddle.pos.y += paddle.y_vel;
 
         //st7565r_putpixel(x, y, 1);
-        draw_entity(&paddle, 1);
+            draw_entity(&old_paddle, 0);
+            draw_entity(&paddle, 1);
+            old_paddle = paddle;
+            //rcc_vsync_wait(4);
+            //frame = 0;
+            //continue;
+        }
+        //draw_entity(&paddle, 1);
+        //rcc_vsync_wait(4);
+        //draw_entity(&ball, 1);
 
         //gpio_out(GPIOA, 0, 1);
         //st7565r_clear();
@@ -419,10 +509,12 @@ int main(){
         //draw_text(50, 8, "Item 2");
         //draw_text(50, 16, "Item 3");
         //item2.func_ptr();
-        st7565r_update();
-        while(ABS(systick_counter_get() - start_ticks) < FPSCOUNT){
+        //st7565r_update();
+        /*while(ABS(systick_counter_get() - start_ticks) < FPSCOUNT){
 
-        }
+        }*/
+        frame++;
+        //rcc_vsync_wait(1);
     }
     adc_t *ADC1 = (adc_t *)ADC1BASE; 
     adc_init(ADC1);
