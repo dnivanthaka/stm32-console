@@ -66,7 +66,9 @@ inline void system_init() {
     gpio_init(GPIOB, RCC, 9, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_PUSH);
     //CS
     gpio_init(GPIOB, RCC, 8, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_PUSH);
+    //LED 1
     gpio_init(GPIOA, RCC, 0, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_PUSH);
+    //LED 2
     gpio_init(GPIOA, RCC, 1, GPIO_MODE_OUT_50_MHZ | GPIO_CNF_OUT_PUSH);
 
     //sound
@@ -132,13 +134,21 @@ inline void system_init() {
     gpio_out(GPIOC, 13, 0);
 
     sound_init();
-    sound_beep(500);
+    //sound_beep(500);
 
+    gpio_out(GPIOA, 0, 1);
+    delay_ms(250);
+    gpio_out(GPIOA, 0, 0);
+    gpio_out(GPIOA, 1, 1);
+    delay_ms(250);
+    gpio_out(GPIOA, 1, 0);
     //screen backlight
     gpio_out(GPIOA, 8, 1);
 
     screen_init();
 
+    //gpio_out(GPIOA, 0, 0);
+    //gpio_out(GPIOA, 1, 0);
 
     //st7735_tearing_off(GPIOA, SPI1);
 

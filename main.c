@@ -306,6 +306,12 @@ int main(){
     uint16_t frame = 0;
 
     system_init();
+    adc_t *ADC1 = (adc_t *)ADC1BASE; 
+    adc_init(ADC1);
+
+    srand(systick_counter_get() + (*tmp) + (adc_get(ADC1) & 0x001f) + (adc_get(ADC1) & 0x001f) + ((adc_get(ADC1)) << 4));
+
+    adc_off(ADC1);
     /*
     for(uint16_t i=0;i<(255 * 5);i+=5){
         st7565r_put(i, &Font[i], 5);
@@ -328,7 +334,7 @@ int main(){
     paddle.w = 13;
     paddle.h = 2;
     paddle.pos.x = mid_x - 6;
-    paddle.pos.y = SCREEN_HEIGHT - 2;
+    paddle.pos.y = SCREEN_HEIGHT - 4;
     paddle.prev1.x = paddle.pos.x;
     paddle.prev1.y = paddle.pos.y;
     paddle.prev2.x = paddle.pos.x;
@@ -337,16 +343,17 @@ int main(){
     paddle.y_vel = 0;
 
     entity_t ball;
-    ball.w = 3;
-    ball.h = 3;
-    ball.pos.x = SCREEN_WIDTH_MID - 1;
+    ball.w = 4;
+    ball.h = 4;
+    //ball.pos.x = SCREEN_WIDTH_MID - 1;
+    ball.pos.x = rand() % SCREEN_WIDTH;
     ball.pos.y = 0;
     ball.prev1.x = ball.pos.x;
     ball.prev1.y = ball.pos.y;
     ball.prev2.x = ball.pos.x;
     ball.prev2.y = ball.pos.y;
-    ball.x_vel = 1;
-    ball.y_vel = 1;
+    ball.x_vel = 2;
+    ball.y_vel = 2;
 
     entity_t old_paddle, old_ball;
 
@@ -410,47 +417,46 @@ int main(){
         if(paddle.pos.x + paddle.x_vel + paddle.w >= SCREEN_WIDTH){
             //x_vel = -1;
             paddle.x_vel = 0;
+            paddle.pos.x = SCREEN_WIDTH - paddle.w;
         }else if(paddle.pos.x + paddle.x_vel < 0){
             //x_vel = 1;
             paddle.x_vel = 0;
+            paddle.pos.x = 0;
         }
 
         //if(ball.pos.x + ball.x_vel + ball.w > SCREEN_WIDTH){
         if(ball.pos.x + ball.w > SCREEN_WIDTH){
             //x_vel = -1;
-            ball.x_vel = -1;
+            ball.x_vel = -2;
+            //ball.pos.x = SCREEN_WIDTH;
         }
         if(ball.pos.x + ball.x_vel < 0){
             //x_vel = 1;
-            ball.x_vel = 1;
+            ball.x_vel = 2;
+            //ball.pos.x = -1;
         }
         //if(ball.pos.y + ball.y_vel + ball.h > SCREEN_HEIGHT){
         if(ball.pos.y + ball.h > SCREEN_HEIGHT){
             //x_vel = -1;
-            ball.y_vel = -1;
+            ball.y_vel = -2;
+            //ball.pos.y = SCREEN_HEIGHT;
         }
         if(ball.pos.y + ball.y_vel < 0){
             //x_vel = 1;
-            ball.y_vel = 1;
+            ball.y_vel = 2;
+            //ball.pos.y = -1;
         }
-        /*
-        if(y + y_vel >= SCREEN_HEIGHT){
-            //y_vel = -1;
-            y_vel = 0;
-        }else if(y + y_vel < 0){
-            //y_vel = 1;
-            y_vel = 0;
-        }
-        */
-            ball.prev2.x = ball.prev1.x;
-            ball.prev2.y = ball.prev1.y;
 
-            ball.prev1.x = ball.pos.x;
-            ball.prev1.y = ball.pos.y;
 
-            ball.pos.x += ball.x_vel;
-            ball.pos.y += ball.y_vel;
-       if(frame % 4 == 0){
+        if(frame % 4 == 0){
+        ball.prev2.x = ball.prev1.x;
+        ball.prev2.y = ball.prev1.y;
+
+        ball.prev1.x = ball.pos.x;
+        ball.prev1.y = ball.pos.y;
+
+        ball.pos.x += ball.x_vel;
+        ball.pos.y += ball.y_vel;
             //old_ball.pos.x = old_ball.prev1.x;
             //old_ball.pos.y = old_ball.prev1.y;
 
@@ -470,18 +476,19 @@ int main(){
             
             old_ball = ball;
             //delay_ms(25);
-            rcc_vsync_wait(4);
-       }
+            //rcc_vsync_wait(2);
+        }
 
-            paddle.prev2.x = paddle.prev1.x;
-            paddle.prev2.y = paddle.prev1.y;
 
-            paddle.prev1.x = paddle.pos.x;
-            paddle.prev1.y = paddle.pos.y;
+        if(frame % 1 == 0){
+        paddle.prev2.x = paddle.prev1.x;
+        paddle.prev2.y = paddle.prev1.y;
 
-            paddle.pos.x += paddle.x_vel;
-            paddle.pos.y += paddle.y_vel;
-        if(frame % 4 == 0){
+        paddle.prev1.x = paddle.pos.x;
+        paddle.prev1.y = paddle.pos.y;
+
+        paddle.pos.x += paddle.x_vel;
+        paddle.pos.y += paddle.y_vel;
             //paddle.pos.x += paddle.x_vel;
             //paddle.pos.y += paddle.y_vel;
 
@@ -516,12 +523,6 @@ int main(){
         frame++;
         //rcc_vsync_wait(1);
     }
-    adc_t *ADC1 = (adc_t *)ADC1BASE; 
-    adc_init(ADC1);
-
-    srand(systick_counter_get() + (*tmp) + (adc_get(ADC1) & 0x001f) + (adc_get(ADC1) & 0x001f) + ((adc_get(ADC1)) << 4));
-
-    adc_off(ADC1);
 
     //Turn off led
     //gpio_out(gpio_c, 13, 0);
