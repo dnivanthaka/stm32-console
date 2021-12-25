@@ -1,6 +1,8 @@
 # Makefile for blink demo
 
 #TOOLS = arm-linux-gnu
+IDIR = include
+ODIR = obj
 TOOLS = arm-none-eabi
 
 # Assembling with gcc makes it want crt0 at link time.
@@ -8,7 +10,7 @@ TOOLS = arm-none-eabi
 AS = $(TOOLS)-as
 # Use the -g flag if you intend to use gdb
 #CC = $(TOOLS)-gcc -mcpu=cortex-m3 -mthumb, added -Os flag to optimize code generation
-CC = $(TOOLS)-gcc -mcpu=cortex-m3 -mthumb -g -Os
+CC = $(TOOLS)-gcc -mcpu=cortex-m3 -mthumb -g -Os -I$(IDIR)
 
 #LD = $(TOOLS)-gcc
 LD = $(TOOLS)-ld.bfd
@@ -16,7 +18,7 @@ OBJCOPY = $(TOOLS)-objcopy
 DUMP = $(TOOLS)-objdump -d
 GDB = $(TOOLS)-gdb
 
-OBJS = start.o startup.o gpio.o adc.o rcc.o interrupts.o usart.o main.o spi.o i2c.o pcf8574.o st7565r.o keypad.o sound.o eventq.o
+OBJS = start.o startup.o gpio.o adc.o rcc.o interrupts.o usart.o system.o spi.o i2c.o pcf8574.o st7565r.o keypad.o sound.o eventq.o test.o
 
 all: main.bin main.dump
 
@@ -35,8 +37,11 @@ start.o:	start.s
 startup.o:	startup.c
 	$(CC) -c startup.c
 
-main.o:	main.c
-	$(CC) -c main.c
+system.o:	system.c 
+	$(CC) -c system.c 
+
+test.o:	test.c 
+	$(CC) -c test.c 
 
 rcc.o:	rcc.c
 	$(CC) -c rcc.c

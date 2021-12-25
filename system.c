@@ -15,6 +15,7 @@
 #include "font.h"
 #include "eventq.h"
 #include "dma.h"
+#include "system.h"
 
 //#define FPSCOUNT 1000/60 //(60fps) in ms
 
@@ -312,6 +313,9 @@ int main(){
     srand(systick_counter_get() + (*tmp) + (adc_get(ADC1) & 0x001f) + (adc_get(ADC1) & 0x001f) + ((adc_get(ADC1)) << 4));
 
     adc_off(ADC1);
+
+    setup();
+
     /*
     for(uint16_t i=0;i<(255 * 5);i+=5){
         st7565r_put(i, &Font[i], 5);
